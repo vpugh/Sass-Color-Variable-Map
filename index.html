@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sass Color Variable Map</title>
+
+  <!-- css -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tachyons/4.6.2/tachyons.min.css">
+
+  <!-- js -->
+  <script src="https://unpkg.com/vue"></script>
+
+  <style>
+    input[type="color"] {
+        -webkit-appearance: none;
+        border: none;
+        background-color: transparent;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch {
+        border: none;
+    }
+    input:focus {
+    outline:none;
+    -webkit-focus-ring-color: auto 0;
+    }
+    input[class^="text"]{text-transform:capitalize;}
+
+    /* // modal */
+    .modal-mask {
+        position: fixed;
+        z-index: 9998;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, .5);
+        transition: opacity .3s ease;
+    }
+
+    .modal-container {
+        width: 300px;
+        margin: 40px auto 0;
+        padding: 20px 30px;
+        background-color: #fff;
+        border-radius: 2px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
+        transition: all .3s ease;
+        font-family: Helvetica, Arial, sans-serif;
+    }
+
+    .modal-header h3 {
+        margin-top: 0;
+        color: #42b983;
+    }
+
+    .modal-body {
+        margin: 20px 0;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 1em;
+    }
+
+    .form-label > .form-control {
+        margin-top: 0.5em;
+    }
+
+    .form-control {
+        display: block;
+        width: 100%;
+        padding: 0.5em 0;
+        line-height: 1.5;
+        border: 1px solid #ddd;
+    }
+
+    /*
+    * The following styles are auto-applied to elements with
+    * transition="modal" when their visibility is toggled
+    * by Vue.js.
+    *
+    * You can easily play with the modal transition by editing
+    * these styles.
+    */
+
+    .modal-enter {
+    opacity: 0;
+    }
+
+    .modal-leave-active {
+    opacity: 0;
+    }
+
+    .modal-enter .modal-container,
+    .modal-leave-active .modal-container {
+    -webkit-transform: scale(1.1);
+    transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+  <!-- our template -->
+  <!-- template for the modal component -->
+<script type="x/template" id="modal-template">
+    <transition name="modal">
+        <div class="modal-mask" v-show="show" @click="close">
+            <div class="modal-container" @click.stop>
+                <div class="modal-header">
+                    <h3>Add Color</h3>
+                </div>
+                <div class="modal-body">
+                    <h2>Pick a variable</h2>
+                    <label class="form-label">
+                        [Array of Variables]
+                    </label>
+                    <h2>Choose Color</h2>
+                    <label class="form-label">
+                        Color Name
+                        <input class="form-control">
+                    </label>
+                    <label class="form-label">
+                        Color
+                        <input type="color" class="w-100 h3">
+                    </label>
+                    <button class="reset-button bg-white-70 ba ba--black-90 addColor pa4 dim w-100" @click="addColor(row, index)">Add Color</button>
+                </div>
+                <!-- <div class="modal-footer text-right">
+                    <button class="modal-default-button" @click="savePost()">
+                        Save
+                    </button>
+                </div> -->
+            </div>
+        </div>
+    </transition>
+</script>
+
+
+
+<div id="app" class="mw100 center relative">
+    <modal v-with="variables" :show="showModal" @close="showModal = false"></modal>
+    <div class="color-row cf relative w-60 bg-black-10 pv4 h-100">
+    <h3 class="ma0 mb3 f4 pl5">Colormap: Color Selection</h3>
+
+    <!--   Start of Variables   -->
+    <div class="relative db overflow-hidden bb b--black-10 pt4">
+        <h2 class="ma0 mb3 f5 pl5 dib">Color Variables</h2>
+        <button @click="addVariable" class="button-reset f6 ph3 pv2 ba b--black-20 bg-washed-green dark-green dim">Add Variable</button>
+        <ul class="ma0 pa0 pb4">
+            <li class="list pl5 dib pb3" v-for="(variable, index) in variables">
+                <input type="text" v-model="variable.variableName" placeholder="Name of your variable" class="text colorName pl2 pv2" :value="variable.variableName" @input="variable.variableName = $event.target.value.toLowerCase()">
+                <input type="text" v-model="variable.variableColor" placeholder="variable color" class="colorName pl2 pv2" :value="variable.variableColor" @input="variable.variableColor = $event.target.value.toLowerCase()">
+                <button @click="removeVariable(index)" class="button-reset f6 ph3 pv2 ba b--black-20 bg-washed-red dark-red dim">Delete</button>
+                <div v-bind:style="{'background-color': variable.variableColor }" class="w-100 h2 mt2"></div>
+            </li>
+        </ul>
+    </div>
+
+    <!--   Start of rows   -->
+    <div ref="rowlocation" class="relative db overflow-hidden bb b--black-10 pt4" v-if="rowExist&&correctRow" v-for="(row, index) in rows" >
+
+        <!--    Row Header - Name and Remove Button    -->
+        <div class="pl5">
+            <input type="text" v-model="row.rowHeader" class="text rowHeader mr3 mv3 pa0 bn pv2 pl2" :value="row.rowHeader" @input="row.rowHeader = $event.target.value.toLowerCase()">
+            <button @click="removeRow(index)" class="button-reset f6 ph3 pv2 ba b--black-20 bg-washed-red dark-red dim">Remove Row</button>
+        </div>
+
+        <!--    List of actual colors  - Color Name, Color Picker and Delete Button    -->
+        <ul class="fl flex flex-wrap item-start clearfix db pl5">
+            <li v-for="(color, index) in row.colors" class="pr4 pv3 flex-wrap list">
+                <div class="pb2">
+                    <input type="color" v-model="color.selectColor" class="w-100 h3">
+                </div>
+                <input type="text" v-model="color.colorName" placeholder="Describe Color" class="text colorName pl2 pv2" :value="color.colorName" @input="color.colorName = $event.target.value.toLowerCase()">
+                <button @click="removeColor(row, index)" class="button-reset f6 ph3 pv2 ba b--black-20 bg-washed-red dark-red dim">Delete</button>
+            </li>
+            <li class="pr4 pv3 flex-wrap list">
+                <div class="pb2">
+                    <button class="reset-button bg-white-70 ba ba--black-90 addColor pa4 dim w-100" id="show-modal" @click="showModal = true">Add Color</button>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="pl5">
+      <button @click="addRow" class="mv4">New Row</button>
+    </div>
+  </div>
+  
+  <!--  Sass Output  -->
+  <aside class="w-30 absolute right-2 top-0 pv4 fixed">
+    <h3 class="ma0 mb3 f4">Colormap: Sass Output</h3>
+    <div class="pl4 ba b--black-10 pa4 br-2">
+        <code>
+            <div class="pb3">
+                <ul class="list pa0 ma0">
+                    <li v-for="(variable, index) in variables">
+                ${{variable.variableName}}: {{variable.variableColor}}
+                    </li>
+                </ul>
+            </div>
+            $colors: (
+                <div v-if="rowExist" v-for="(row, index) in rows" class="pv2 pl3">
+                {{row.rowHeader}} : (
+                <p v-for="(color, index) in row.colors" class="ma0 db pl3 pt2">
+                {{color.colorName}}: {{color.selectColor}}, 
+                    </p>
+                </div>
+                <div class="pv2 pl3">)</div>
+            );
+        </code>
+    </div>
+  </aside>
+</div>
+
+  <!-- our javascript -->
+  <script>
+   Vue.component('modal', {
+    template: '#modal-template',
+    props: ['show', 'variables'],
+    methods: {
+      savePost: function () {
+        // Some save logic goes here...
+        
+        this.$emit('close');
+      },
+      close: function() {
+        this.$emit('close');
+      },
+      addColor: function(row) {
+        const newColorBox = {
+          selectColor: '#ffffff',
+          colorName: 'white',
+          rowId: Date.now()
+        };
+        row.colors.push(newColorBox);
+        
+      },
+    }
+  });
+  
+  var parent = new Vue({
+    el: '#app',
+    data: {
+      showModal: false,
+      rows: [],
+      colors: [],
+      rowId: [],
+      variables: [
+        {
+          variableName: 'text',
+          variableColor: '#4a4a4a'
+        },
+        {
+          variableName: 'orange',
+          variableColor: '#fc4a1a'
+        }
+      ]
+    },
+    computed: {
+      colorsExist: function() {
+        return 'smth true'
+      },
+      colorName: function() {
+        this.colors.selectColor;
+      },
+      rowExist: function() {
+        return this.rows.length > 0;
+      },
+      findRow: function() {
+        return this.row;
+      }
+    },
+    methods: {
+      currentColor: function() {
+        this.selectColor = selectColor;
+      },
+      addVariable: function() {
+        const newColorVariable = {
+          variableName: 'variable',
+          variableColor: '#ffffff'
+        };
+        this.variables.push(newColorVariable);
+      },
+      addColor: function(row) {
+        const newColorBox = {
+          selectColor: '#ffffff',
+          colorName: 'white',
+          rowId: Date.now()
+        };
+        row.colors.push(newColorBox);
+        
+      },
+      addRow: function() {
+        const newRow = {
+          rowHeader: "New Row",
+          id: Date.now(),
+          colors: []
+        };
+        this.rows.push(newRow);
+      },
+      
+      removeColor: function(row, index) {
+        row.colors.splice(index, 1);
+      },
+      
+      removeRow: function(index) {
+        this.rows.splice(index, 1);
+      },
+      
+      removeVariable: function(index) {
+        this.variables.splice(index, 1);
+      },
+      
+      correctRow: function(index) {
+        this.rows.row == this.rows;
+      }
+    }
+  })
+  </script>
+</body>
+</html>
